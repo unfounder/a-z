@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Z Browser</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="browser">
+
+    <!-- TOP BAR -->
+    <div id="top-bar" data-tauri-drag-region>
+        <span class="top-title" data-tauri-drag-region>A-Z Browser</span>
+        <span id="top-url" class="top-url" data-tauri-drag-region></span>
+        <span class="top-controls">
+            <span class="ctrl-btn" id="btn-min">_</span>
+            <span class="ctrl-btn" id="btn-max">[ ]</span>
+            <span class="ctrl-btn ctrl-close" id="btn-close">x</span>
+        </span>
+    </div>
+
+    <!-- BOOKMARKS -->
+    <div id="bookmarks">
+        <div class="bm-row">
+            <span class="bm-link" data-url="https://duckduckgo.com">Search</span>
+            <span class="bm-link" data-url="https://images.google.com">Images</span>
+            <span class="bm-link" data-url="https://maps.google.com">Maps</span>
+            <span class="bm-link" data-url="https://play.google.com">Play</span>
+            <span class="bm-link" data-url="https://youtube.com">YouTube</span>
+            <span class="bm-link" data-url="https://news.google.com">News</span>
+            <span class="bm-link" data-url="https://gmail.com">Gmail</span>
+            <span class="bm-link" data-url="https://drive.google.com">Drive</span>
+            <span class="bm-more">More &raquo;</span>
+        </div>
+        <div class="bm-row">
+            <span class="bm-link" data-url="https://github.com">GitHub</span>
+            <span class="bm-sep"> | </span>
+            <span class="bm-link" data-url="https://wikipedia.org">Wikipedia</span>
+            <span class="bm-sep"> | </span>
+            <span class="bm-link" data-url="https://news.ycombinator.com">Hacker News</span>
+            <span class="bm-sep"> | </span>
+            <span class="bm-link" data-url="https://reddit.com">Reddit</span>
+            <span class="bm-sep"> | </span>
+            <span class="bm-link" data-url="https://amazon.com">Amazon</span>
+        </div>
+    </div>
+
+    <!-- PAGE AREA -->
+    <div id="page-area">
+        <div id="page-content"></div>
+    </div>
+
+    <!-- COMMAND BAR -->
+    <div id="cmd-bar">
+        <span class="cmd-label">URL:</span>
+        <input type="text" id="cmd-input" placeholder="Type URL or search query..." spellcheck="false" autocomplete="off">
+        <span class="cmd-go" id="cmd-go">[Go]</span>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div id="status-bar">
+        <span class="status-left">
+            <span class="status-arrows">&lt;&lt; ^ v</span>
+            <span class="status-pill" id="status-viewing">Ready</span>
+        </span>
+        <span class="status-hints">Tab: next link | Enter: follow | b: back | /: URL | q: home | V: page view</span>
+    </div>
+
+</div>
+<script src="nav.js"></script>
+<script src="renderer.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

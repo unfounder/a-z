@@ -1,0 +1,14 @@
+// A-Z Browser Pipeline Configuration
+// Place this file next to a-z.exe to customize the stage order.
+// Valid stage names: NormalizeUrl, JsSecurity, BitFox, HttpFetch, ParseHtml, YoutubeHydrate, Serialize
+(
+    stages: [
+        "NormalizeUrl",
+        "JsSecurity",
+        "BitFox",
+        "HttpFetch",
+        "ParseHtml",
+        "YoutubeHydrate",
+        "Serialize",
+    ]
+)
