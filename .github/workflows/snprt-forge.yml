@@ -1,0 +1,97 @@
+name: Snprt Forge (a-z)
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  smelt:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            rid: linux-x64
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux build deps
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Stage binary
+        shell: pwsh
+        run: |
+          $ext = if ($env:RUNNER_OS -eq 'Windows') { '.exe' } else { '' }
+          New-Item -ItemType Directory -Path ./dist -Force | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/a-z$ext" ./dist/
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Snprt Registry
+        shell: pwsh
+        env:
+          SNPRT_TOKEN: ${{ secrets.SNPRT_TOKEN }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SNPRT_TOKEN)) {
+            Write-Warning 'SNPRT_TOKEN secret not set - skipping registry notify.'
+            exit 0
+          }
+          $binary = Get-ChildItem ./dist,./publish -ErrorAction SilentlyContinue |
+            Where-Object { $_.Extension -notin @('.pdb','.json','.sha256','.txt') } |
+            Sort-Object Length -Descending | Select-Object -First 1
+          if (-not $binary) { Write-Warning 'No binary found - skipping.'; exit 0 }
+          $hash = (Get-FileHash $binary.FullName -Algorithm SHA256).Hash.ToLower()
+          $version = '${{ github.ref_name }}'
+          $perms = @{ network = $false; filesystem = $false; environmentVariables = $false; adminRights = $false }
+          $description = ''
+          if (Test-Path ./snprt.yml) {
+            $yml = Get-Content ./snprt.yml -Raw
+            $perms.network              = [bool]($yml -match '(?m)^\s*network:\s*true')
+            $perms.filesystem           = [bool]($yml -match '(?m)^\s*filesystem:\s*true')
+            $perms.environmentVariables = [bool]($yml -match '(?m)^\s*environment_variables:\s*true')
+            $perms.adminRights          = [bool]($yml -match '(?m)^\s*admin_rights:\s*true')
+            if ($yml -match '(?m)^description:\s*(.+?)\s*$') { $description = $Matches[1].Trim(' ', [char]34, [char]39) }
+          }
+          $body = [ordered]@{
+            owner       = '${{ github.repository_owner }}'
+            name        = '${{ github.event.repository.name }}'
+            version     = $version
+            rid         = '${{ matrix.rid }}'
+            fileName    = $binary.Name
+            checksum    = $hash
+            downloadUrl = "https://github.com/${{ github.repository }}/releases/download/$version/$($binary.Name)"
+            description = $description
+            permissions = $perms
+          } | ConvertTo-Json -Compress
+          try {
+            $r = Invoke-WebRequest -Uri 'https://snprt-production.up.railway.app/api/v1/registry/notify' `
+              -Method POST `
+              -Headers @{ Authorization = "Bearer $env:SNPRT_TOKEN" } `
+              -Body $body `
+              -ContentType 'application/json' `
+              -UseBasicParsing `
+              -ErrorAction Stop
+            Write-Host "Registry notified (HTTP $($r.StatusCode))"
+          } catch {
+            Write-Warning "Registry notify failed: $_"
+          }
