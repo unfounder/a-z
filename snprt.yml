@@ -1,0 +1,9 @@
+name: a-z
+description: A sandboxed terminal web browser built with Rust
+type: rust
+
+permissions:
+  network: true
+  filesystem: true
+  environment_variables: false
+  admin_rights: false
