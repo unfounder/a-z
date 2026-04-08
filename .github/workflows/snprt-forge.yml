@@ -53,7 +53,7 @@ jobs:
           SNPRT_TOKEN: ${{ secrets.SNPRT_TOKEN }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:SNPRT_TOKEN)) {
-            Write-Warning 'SNPRT_TOKEN secret not set - skipping registry notify.'
+            Write-Warning 'SNPRT_TOKEN secret not set - skipping registry notify. Run snprt login then snprt push to register.'
             exit 0
           }
           $binary = Get-ChildItem ./dist,./publish -ErrorAction SilentlyContinue |
